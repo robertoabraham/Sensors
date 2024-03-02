@@ -21,13 +21,20 @@ from photutils.centroids import centroid_quadratic
 from photutils.profiles import RadialProfile
 from photutils.datasets import make_noise_image
 
-import astrometry
+from astropy.samp import SAMPIntegratedClient
+
+
+# import astrometry
 
 import logging
 log = logging.getLogger('team_dragonfly')
 log.addHandler(logging.NullHandler())
 
 import logging
+
+# Only one client should ever exist, so create it here.
+client = SAMPIntegratedClient(addr='127.0.0.1')
+client.connect()
 
 # Typical workflow:
 #
@@ -298,33 +305,49 @@ def ds9(input_filename, zoom="to fit", pan=None, zrange=None, ztrans=None, verbo
         ztrans (_type_, optional): One of "linear", "sqrt", "log" or None (unchanged). Defaults to None.
         verbose (bool, optional): Display verbose messages. Defaults to False.
     """
-    run_xpa_command("file {}".format(input_filename), verbose=verbose)
+    run_samp_command("file {}".format(input_filename), verbose=verbose)
     if zoom:
-        run_xpa_command(f"zoom {zoom}", verbose=verbose)      
+        run_samp_command(f"zoom {zoom}", verbose=verbose)      
     if zrange:
-        run_xpa_command(f"scale limits {zrange[0]} {zrange[1]}", verbose=verbose)
+        run_samp_command(f"scale limits {zrange[0]} {zrange[1]}", verbose=verbose)
     if ztrans:
-        run_xpa_command(f"scale {ztrans}", verbose=verbose)
+        run_samp_command(f"scale {ztrans}", verbose=verbose)
     if pan:
-        run_xpa_command(f"pan to {pan[0]} {pan[1]} physical", verbose=verbose)
+        run_samp_command(f"pan to {pan[0]} {pan[1]} physical", verbose=verbose)
 
 
-def run_xpa_command(command, verbose=False):
-    """XPA command to be sent to SAOImage DS9.
+def load_ds9(input_filename, verbose=False):
+    """Displays an image into a new ds9 frame.
+
+    Args:
+        input_filename (string): path to FITS file.
+    """
+
+    params = {}
+    params["url"] = f"file://{input_filename}"
+    params["name"] = "FITS image to display"
+    message = {}
+    message["samp.mtype"] = "image.load.fits"
+    message["samp.params"] = params
+    client.notify_all(message)
+    
+    
+def run_samp_command(command, verbose=False):
+    """SAMP command to be sent to SAOImage DS9.
 
     Args:
         command (string): XPA command to send.
-        verbose (bool, optional): Prints full xpaset command line. Defaults to False.
+        verbose (bool, optional): Prints full SAMP command. Defaults to False.
 
     Returns:
-        _type_: _description_
+        result: result from the samp command
     """
-    command_line = "/usr/bin/xpaset -p ds9 "
-    command_list = command_line.split()
-    command_list.append(command)
-    if verbose:
-        print("Running: {}".format(command_line + " '" + command + "'"))
-    result = subprocess.run(command_list, capture_output=True, check=True)
+    params = {}
+    params["cmd"] = command
+    message = {}
+    message["samp.mtype"] = "ds9.set"
+    message["samp.params"] = params
+    result = client.notify_all(message)
     return result
 
 
