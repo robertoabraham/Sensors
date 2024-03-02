@@ -16,6 +16,7 @@ def latest_fits_file(dirname):
     latest_file = max(list_of_files, key=os.path.getctime)
     return latest_file
 
+
 def fits_files_in_range(directory, start, end):
     files = []
     for filename in os.listdir(directory):
@@ -27,46 +28,32 @@ def fits_files_in_range(directory, start, end):
     # Sort the filenames so that files with _3_ come before _23_, etc.
     files = sorted(files, key=lambda s: int(re.search(r'_(\d+)_', s).group(1)))            
     return(files)
-     
-def highest_fits_sequence_number(serno:str, directory:str) -> str:
-    fileno_max = None
-    for filename in os.listdir(directory):
-        try:
-            basename, ext = os.path.splitext(filename)        
-            if '.fits' in ext:
-                fileno = int(re.search(r'' + serno +'_(\d+)_',basename).group(1))
-                if fileno_max is None or fileno > fileno_max:
-                    fileno_max = fileno
-        except AttributeError:
-            pass    
-    return(fileno_max)
 
-def summarize_directory(directory, start=0, end=100000,
-                    keys=['DATE','EXPTIME','FOCUSPOS','CCD-TEMP','NAXIS1','NAXIS2'],
+def fits_files(dirname):
+    files = glob.glob(os.path.join(dirname,'*.fit*'))
+    return files
+    
+def summarize_directory(directory, 
+                    keys=['DATE-OBS','EXPTIME','GAIN','CCD-TEMP','NAXIS1','NAXIS2'],
                     full_path=False):
     """Returns a DataFrame with header information for a set of FITS files in a specified directory.
 
     Args:
         directory (string): Path to directory
-        start (int, optional): Starting file number. Defaults to 0.
-        end (int, optional): Ending file number. Defaults to 100000.
         keys (list, optional): List of FITS keywords to summarize. Defaults to ['DATE','EXPTIME','FOCUSPOS','CCD-TEMP','NAXIS1','NAXIS2'].
         full_path (bool, optional): Include full path in filename. Defaults to False.
     """
     
     # These will be the dataframe keys.
     new_keys = keys.copy()
-    new_keys.insert(0,'FILENUM') # Put this at the beginning
     new_keys.append('FILENAME')  # Put this at the end
     
     # Iterate over all the files and create an array with all the information.
-    files = fits_files_in_range(directory, start, end)
+    files = fits_files(directory)
     rows = []
     for filename in files:
         basename, ext = os.path.splitext(filename)
-        file_number = int(basename.split("/")[-1].split("_")[1])
         new_row = {}
-        new_row['FILENUM'] = file_number
         hdul = fits.open(filename)
         hdr = hdul[0].header
         for key in keys:       
