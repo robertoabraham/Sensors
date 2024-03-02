@@ -32,9 +32,19 @@ def fits_files_in_range(directory, start, end):
 def fits_files(dirname):
     files = glob.glob(os.path.join(dirname,'*.fit*'))
     return files
+
+def fits_header(filename):
+    """Returns the header of a FITS file as a dictionary."""
+    hdul = fits.open(filename)
+    hdr = hdul[0].header
+    return hdr
+
+def fits_keywords(filename):
+    """Returns a list of all the FITS keywords in a FITS file."""
+    header = fits_header(filename)
+    return list(header.keys())
     
 def summarize_directory(directory, 
-                    keys=['DATE-OBS','EXPTIME','GAIN','CCD-TEMP','NAXIS1','NAXIS2'],
                     full_path=False):
     """Returns a DataFrame with header information for a set of FITS files in a specified directory.
 
@@ -44,25 +54,31 @@ def summarize_directory(directory,
         full_path (bool, optional): Include full path in filename. Defaults to False.
     """
     
-    # These will be the dataframe keys.
+    # Get a list of all the files
+    files = fits_files(directory)
+    
+    # Get a list of all the header keys, by sampling the keys in the first file
+    keys = fits_keywords(files[0])
     new_keys = keys.copy()
     new_keys.append('FILENAME')  # Put this at the end
     
-    # Iterate over all the files and create an array with all the information.
-    files = fits_files(directory)
+    # Now iterate over all the files and build up a Pandas Dataframe
     rows = []
     for filename in files:
         basename, ext = os.path.splitext(filename)
         new_row = {}
         hdul = fits.open(filename)
         hdr = hdul[0].header
-        for key in keys:       
-            new_row[key] = hdr[key]
-        if not full_path:
-            new_row['FILENAME'] = os.path.basename(filename)
-        else:
-            new_row['FILENAME'] = filename
-        rows.append(new_row)
+        try:   
+            for key in keys:    
+                new_row[key] = hdr[key]
+            if not full_path:
+                new_row['FILENAME'] = os.path.basename(filename)
+            else:
+                new_row['FILENAME'] = filename
+            rows.append(new_row)
+        except KeyError:
+            pass
     df = pd.DataFrame(rows, columns = new_keys)
     return(df)
 

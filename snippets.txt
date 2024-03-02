@@ -1,0 +1,2 @@
+files = utility.summarize_directory("D:/Data/Ting/-10C")
+long_exposures = files[files["EXPTIME"]==3600000]["FILENAME"].to_list()
