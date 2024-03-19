@@ -199,7 +199,7 @@ def create_catalog(filename, detection_sigma = 2.0, min_area = 4, verbose=False,
 
 def display(input_filename, lower_nsigma=2, upper_nsigma=10, 
             zoom=False, zoom_box_size=[200,200], zoom_box_position=[1000,500],
-            catalog=None, label=True):
+            catalog=None, label=True, show=True):
     """display - displays a FITS file using Matplotlib.
 
     Args:
@@ -209,12 +209,18 @@ def display(input_filename, lower_nsigma=2, upper_nsigma=10,
         zoom (bool, optional): zoom in a on region of the image. Defaults to False.
         zoom_box_size (list, optional): zoom box size. Defaults to [200,200].
         zoom_box_position (list, optional): position of zoom box centre. Defaults to [1000,500].
-        catalog (_type_, optional): PANDAS catalog to use for annotation. Defaults to None.
+        catalog (dataframe, optional): PANDAS catalog to use for annotation. Defaults to None.
+        label (bool, optional): draw catalog labels. Defaults to True.
+        show (bool, optional): display the plot. Defaults to True.
     """
 
-    log.info("Loading image: %s" %input_filename)
-    f = fits.open(input_filename)
-    data, h_original = f[0].data, f[0].header
+    # log.info("Loading image: %s" %input_filenamxe)
+    try:
+        f = fits.open(input_filename)
+        data, h_original = f[0].data, f[0].header
+    except ValueError:
+        # Assume a numpy array was passed in.
+        data = input_filename
         
     log.info("Computing sky background level and standard deviation.") 
     sigma_clip = SigmaClip(sigma=3.0)
@@ -234,11 +240,14 @@ def display(input_filename, lower_nsigma=2, upper_nsigma=10,
     log.info("Rendering image.")
     w = 6.5
     h = 5.0
-    fig = plt.figure()
+    #fig = plt.figure()
     #ax = fig.add_subplot(1, 1, 1)
     #fig.set_size_inches(w,h)
     f, ax = plt.subplots(figsize=[w,h])
-    plt.title(os.path.basename(input_filename))
+    try:
+        plt.title(os.path.basename(input_filename))
+    except TypeError:
+        pass
     plt.xlabel('X')
     plt.ylabel('Y')
     if zoom:
@@ -290,8 +299,10 @@ def display(input_filename, lower_nsigma=2, upper_nsigma=10,
         ax.yaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
         ax.set_yticklabels([label_format.format(y + yoffset) for y in ticks_loc])
     
-    f.colorbar(im)    
-    plt.show()
+    f.colorbar(im)   
+    if show: 
+        plt.show()
+    return f, ax
     
     
 def ds9(input_filename, zoom="to fit", pan=None, zrange=None, ztrans=None, verbose=False):
