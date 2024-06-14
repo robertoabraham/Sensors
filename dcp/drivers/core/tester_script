@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for i in {0..100}
+do
+	sudo ./dfcore expose --dark --duration 10 --savedir /data/exposure_testing/newfirmware2 --verbose --filename $i".fits"
+done

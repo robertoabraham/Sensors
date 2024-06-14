@@ -1,0 +1,40 @@
+CC = clang
+CFLAGS = -std=c99 -g
+FFLAGS = -framework SBIGUDrv 
+LFLAGS = -L /opt/local/lib -L /Users/abraham/Dropbox/Dragonfly/CLI/lib -l cfitsio
+INCDIR = /opt/local/include
+SLALIBINC =  /Users/abraham/Dropbox/Dragonfly/CLI/include
+SLALIBDIR =  /Users/abraham/Dropbox/Dragonfly/CLI/lib
+
+DEPS = 
+OBJ = position.o calcoffset.o calcseparation.o
+PROGRAMS = position calcoffset calcseparation
+
+%.o: %.c $(DEPS)
+	$(CC) -c $(CFLAGS) -I${INCDIR} -o $@ $< 
+
+all: position calcoffset calcseparation
+
+position.o: position.c
+	$(CC) -c $(CFLAGS) -I $(SLALIBINC) position.c
+
+position: position.o 
+	$(CC) -o  $@ $^ -I $(SLALIBINC) -L $(SLALIBDIR) -lsla 
+
+calcoffset.o: calcoffset.c
+	$(CC) -c $(CFLAGS) -I $(SLALIBINC) calcoffset.c
+
+calcoffset: calcoffset.o 
+	$(CC) -o  $@ $^ -I $(SLALIBINC) -L $(SLALIBDIR) -lsla 
+
+calcseparation.o: calcseparation.c
+	$(CC) -c $(CFLAGS) -I $(SLALIBINC) calcseparation.c
+
+calcseparation: calcseparation.o 
+	$(CC) -o  $@ $^ -I $(SLALIBINC) -L $(SLALIBDIR) -lsla 
+
+clean:
+	rm -f *.o
+
+install: $(PROGRAMS)
+	mv $(PROGRAMS) /usr/local/bin

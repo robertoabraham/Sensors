@@ -1,0 +1,40 @@
+#! /bin/bash
+
+if [[ $UID != 0 ]]; then
+    echo -e "\e[1;31mError:\e[0m Please run this script with sudo:"
+    echo "sudo $0 $*"
+    exit 1
+fi
+
+TARGET=`ls lib | grep libdlapi.so`
+MAJVER=`ls lib/$TARGET | perl -ne '/(\d+)/ && print "$1\n"'`
+
+mkdir -p /usr/local/include
+mkdir -p /usr/local/lib
+
+echo -e "\e[1;31mInstalling\e[0m lib/libdlapi.so -> \e[1;34m/usr/local/lib\e[0m"
+cp lib/$TARGET /usr/local/lib
+ln -sf /usr/local/lib/$TARGET /usr/local/lib/libdlapi.so.$MAJVER
+ln -sf /usr/local/lib/libdlapi.so.$MAJVER /usr/local/lib/libdlapi.so
+chmod +x /usr/local/lib/$TARGET
+
+echo -e "\e[1;31mInstalling\e[0m include/dlapi.h -> \e[1;34m/usr/local/include\e[0m"
+cp include/dlapi.h /usr/local/include/dlapi.h
+
+if [ -d "/etc/udev/rules.d" ]; then
+	echo -e "\e[1;31mInstalling\e[0m udev/51-sbig-debian.rules -> \e[1;34m/etc/udev/rules.d\e[0m"
+	cp udev/51-sbig-debian.rules /etc/udev/rules.d 
+	udevadm control --reload-rules && udevadm trigger
+else
+	echo -e "\e[1;33mWarn:\e[0m Platform not recognized: custom udev rules not installed."
+fi
+
+if [ -d "/etc/ld.so.conf.d" ]; then
+	echo -e "\e[1;31mInstalling\e[0m conf/dlapi.conf -> \e[1;34m/etc/ld.so.conf.d\e[0m"
+	cp conf/dlapi.conf /etc/ld.so.conf.d
+	ldconfig
+else
+	echo -e "\e[1;33mWarn:\e[0m Please add \e[1;34m/usr/local/lib\e[0m to your \e[1;32mLD_LIBRARY_PATH\e[0m environment variable"
+fi
+
+echo -e "Done!" 

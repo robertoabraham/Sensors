@@ -1,0 +1,57 @@
+# DLAPI Software Development Kit - Linux x86_64
+
+Thank you for downloading the Diffraction Limited DLAPI SDK version 2.1.0.0 for Linux.
+This release provides basic USB connectivity for DLAPI compliant cameras (e.g. the Aluma series of cameras).
+Ethernet/WiFi support is still in development.
+
+Note that this SDK was built for Debian-based distros of Linux (built specifically on Ubuntu 18.04 LTS)
+and the configuration and rules files in conf and udev are only applicable to those distros.
+
+## Contents 
+
+* Binary redistributables for static and dynamic linking,
+* A sample application which connects to a USB camera, retrieves its serial number and takes a picture,
+* Header files necessary for building your own applications
+* udev rules for detecting your camera without sudoer privileges (Debian only)
+* ld.conf rules for automatically adding dlapi to your library load path (Debian only)
+
+## Installation
+Simply run the installer script provided with this package with sudoer privileges:
+
+```
+sudo ./install
+```
+
+This will place the library's header files in /usr/local/include, and the binaries in /usr/local/lib.
+
+## Sample Application
+
+A precompiled x86_64 binary is provided in ./sample, along with a makefile for your own edification.
+To compile and run it, simply type the following commands in your temrinal:
+
+```
+cd sample
+make
+./main
+```
+
+If the sample application does not detect your camera, try running the application with sudoer privileges.
+If the application works with sudoer privileges, but not without, then you likely haven't loaded the 
+custom udev rules provided by the installer script. You can install them manually with:
+
+```
+sudo cp udev/51-sbig-debian.rules /etc/udev/rules.d
+```
+
+If the application runs as intended, then you should see your camera's serial number, and the average
+ADU of a dark frame displayed in the terminal.
+
+## DLAPI Documentation
+
+A full API reference, as well as a "get started" guide are available from [https://diffractionlimited.com/dlapi].
+
+## Contact
+
+If you experience any issues, don't hesitate to reach out to us on our forums at [https://forum.diffractionlimited.com/].
+
+(c) Diffraction Limited, 2019
