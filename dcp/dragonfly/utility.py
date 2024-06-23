@@ -34,12 +34,16 @@ def highest_fits_sequence_number(serno:str, directory:str) -> str:
         try:
             basename, ext = os.path.splitext(filename)        
             if '.fits' in ext:
-                fileno = int(re.search(r'' + serno +'_(\d+)_',basename).group(1))
+                fileno = int(re.search(r'' + serno + '_(\\d+)_', basename).group(1))
                 if fileno_max is None or fileno > fileno_max:
                     fileno_max = fileno
         except AttributeError:
             pass    
     return(fileno_max)
+
+def header(filename):
+    hdul = fits.open(filename)
+    return hdul[0].header
 
 def summarize_directory(directory, start=0, end=100000,
                     keys=['DATE','EXPTIME','FOCUSPOS','CCD-TEMP','NAXIS1','NAXIS2'],
@@ -69,8 +73,11 @@ def summarize_directory(directory, start=0, end=100000,
         new_row['FILENUM'] = file_number
         hdul = fits.open(filename)
         hdr = hdul[0].header
-        for key in keys:       
-            new_row[key] = hdr[key]
+        for key in keys: 
+            try:      
+                new_row[key] = hdr[key]
+            except KeyError as e:
+                new_row[key] = '---'
         if not full_path:
             new_row['FILENAME'] = os.path.basename(filename)
         else:
