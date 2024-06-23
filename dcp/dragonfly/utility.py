@@ -46,8 +46,9 @@ def header(filename):
     return hdul[0].header
 
 def summarize_directory(directory, start=0, end=100000,
-                    keys=['DATE','EXPTIME','FOCUSPOS','CCD-TEMP','NAXIS1','NAXIS2'],
-                    full_path=False):
+                    keys=['DATE','EXPTIME','FOCUSPOS','CCD-TEMP','NAXIS1','NAXIS2','IMAGETYP'],
+                    full_path=False,
+                    missing=np.nan):
     """Returns a DataFrame with header information for a set of FITS files in a specified directory.
 
     Args:
@@ -77,7 +78,7 @@ def summarize_directory(directory, start=0, end=100000,
             try:      
                 new_row[key] = hdr[key]
             except KeyError as e:
-                new_row[key] = '---'
+                new_row[key] = missing
         if not full_path:
             new_row['FILENAME'] = os.path.basename(filename)
         else:
