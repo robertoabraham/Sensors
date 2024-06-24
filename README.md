@@ -35,6 +35,9 @@ df = utility.summarize_directory(
 # Summarize just the darks
 df[df['IMAGETYP'] == 'dark']
 
-# Summarize the'good' (FWHM < 3) frames.
-df[(df['IMAGETYP'] == 'light') & (df['FWHM'] < 3.0)]
+# Summarize the 'good' (FWHM < 2.5) frames.
+df[(df['IMAGETYP'] == 'light') & (df['FWHM'] < 2.5)]
+
+# Get the FWHM values
+df['FWHM'].to_list()
 ```
